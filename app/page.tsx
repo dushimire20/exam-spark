@@ -1,103 +1,77 @@
+"use client";
+import Link from "next/link";
 import Image from "next/image";
+import { BadgeCheck, SearchCheck, CircleCheckBig } from "lucide-react";
+import Companies from "./components/companies";
+import Exams from "./components/homeExams";
+import Newsletter from "./components/newLetter";
 
-export default function Home() {
+const app = () => {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="container w-full bg-[#ECE9E6] ">
+    <div className="relative w-[80%] mx-auto pt-24">
+       <div className='grid grid-cols-1 lg:grid-cols-12 space-x-1 items-center'>
+                    <div className='col-span-6 flex flex-col gap-8 '>
+                        <div className='flex gap-2 text-green-900 mx-auto lg:mx-0'>
+                          <BadgeCheck className='text-xl inline-block me-2' />
+                            <p className='text-success text-sm font-semibold text-center lg:text-start'>Get 30% off on first enroll</p>
+                        </div>
+                        <h1 className='text-primary text-4xl sm:text-5xl font-semibold pt-5 lg:pt-0'>Advance your engineering skills with us.</h1>
+                        <h3 className='text-black/70 text-lg pt-5 lg:pt-0'>Build skills with our practice exams, courses and mentor from world-class companies.</h3>
+                        <div className="relative rounded-full pt-5 lg:pt-0 text-center">
+                            <input type="Email address" name="q" className="py-6 lg:py-8 pl-8 pr-20 text-lg w-full text-primary rounded-full focus:outline-none shadow-2xl" placeholder="search exams..." autoComplete="off" />
+                            <Link href="/" className="bg-secondary p-5 rounded-full absolute right-2 top-2 ">
+                                <SearchCheck className="text-white text-4xl inline-block" />
+                               
+                            </Link>
+                        </div>
+                        <div className='flex items-center justify-between pt-10 lg:pt-4'>
+                            <div className='mad:flex gap-2'>
+                                <CircleCheckBig className='text-2xl text-accent' />
+                                <p className='text-sm sm:text-lg font-normal text-secondary'>Flexible</p>
+                            </div>
+                            <div className='flex gap-2'>
+                               <CircleCheckBig className='text-2xl text-accent' />
+                                <p className='text-sm sm:text-lg font-normal text-secondary'>Learning path</p>
+                            </div>
+                            <div className='flex gap-2'>
+                               <CircleCheckBig className='text-2xl text-accent' />
+                                <p className='text-sm sm:text-lg font-normal text-secondary'>Community</p>
+                            </div>
+                        </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+                    </div>
+                    <div className='col-span-6 flex justify-center'>
+                        <Image src="/Hero.png" alt="nothing" width={1000} height={805} />
+                    </div>
+                </div>
+
     </div>
-  );
-}
+
+    <div className="w-full bg-white py-10">
+      <div className="container mx-auto lg:max-w-screen-xl md:max-w-screen-md px-4">
+        <Companies />
+      </div>
+    </div>
+
+    <div className="w-full bg-white py-10">
+      <div className="container mx-auto ">
+        <Exams />
+      </div>
+    </div>
+
+     <div className="w-full bg-white py-10">
+      <div className="container mx-auto ">
+        <Newsletter />
+      </div>
+    </div>
+
+   
+
+
+
+  </div>
+  )
+};
+
+export default app;
