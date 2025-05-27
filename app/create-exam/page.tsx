@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import ReactMarkdown from "react-markdown";
 
 interface Question {
   questionText: string;
@@ -20,6 +19,7 @@ const CreateExam: React.FC = () => {
   const handleQuestionChange = (
     index: number,
     field: keyof Question,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any
   ) => {
     const newQuestions = [...questions];

@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
     });
 
     const updatedQuestions = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       examQuestions.map(async (q: any) => {
         if (q.image && typeof q.image === 'string' && q.image.startsWith('data:image')) {
           try {
