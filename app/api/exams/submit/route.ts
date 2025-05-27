@@ -13,6 +13,7 @@ export async function POST(req: Request) {
   }
 
   let score = 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   exam.examQuestions.forEach((q: any, i: number) => {
     if (answers[i] === q.correctAnswer) score += q.points || 1;
   });
