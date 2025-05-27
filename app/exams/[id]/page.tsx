@@ -10,10 +10,16 @@ type ExamHeaderProps = {
   timeLeft: number;
 };
 
+const formatTime = (sec: number) => {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s < 10 ? "0" + s : s}`;
+};
+
 const ExamHeader = ({ title, timeLeft }: ExamHeaderProps) => (
   <div className="flex justify-between items-center mb-6">
-    <h1 className="text-2xl font-bold">{title}</h1>
-    <div className="flex items-center gap-2 text-red-600 font-semibold">
+    <h1 className="text-3xl font-bold text-gray-800">{title}</h1>
+    <div className="flex items-center gap-2 text-red-600 text-lg font-semibold">
       <Clock className="w-5 h-5" />
       <span>{formatTime(timeLeft)}</span>
     </div>
@@ -43,7 +49,7 @@ const QuestionDisplay = ({
   onChange,
 }: QuestionDisplayProps) => (
   <div>
-    <h2 className="text-lg font-semibold mb-4">
+    <h2 className="text-xl font-semibold mb-4 text-gray-700">
       Question {index + 1} of {total}
     </h2>
 
@@ -54,21 +60,23 @@ const QuestionDisplay = ({
           alt={`Question ${index + 1}`}
           width={600}
           height={400}
-          className="rounded"
+          className="rounded-lg object-cover"
         />
       </div>
     )}
 
-    <p className="mb-4 text-gray-800 font-medium whitespace-pre-line">
+    <p className="mb-4 text-gray-800 text-lg font-medium whitespace-pre-line leading-relaxed">
       {question.questionName}
     </p>
 
-    <div className="space-y-2">
+    <div className="space-y-3">
       {question.choices.map((opt, i) => (
         <label
           key={i}
-          className={`block border rounded-md px-4 py-2 cursor-pointer hover:bg-gray-100 ${
-            selected === opt ? "border-blue-500 bg-blue-50" : ""
+          className={`flex items-center border px-4 py-3 rounded-md cursor-pointer transition ${
+            selected === opt
+              ? "bg-blue-50 border-blue-600"
+              : "hover:bg-gray-50 border-gray-300"
           }`}
         >
           <input
@@ -77,9 +85,9 @@ const QuestionDisplay = ({
             value={opt}
             checked={selected === opt}
             onChange={() => onChange(index, opt)}
-            className="mr-2"
+            className="mr-3"
           />
-          {opt}
+          <span className="text-gray-700 font-medium">{opt}</span>
         </label>
       ))}
     </div>
@@ -96,18 +104,17 @@ type ResultsDisplayProps = {
 };
 
 const ResultsDisplay = ({ exam, answers, score }: ResultsDisplayProps) => (
-  <div className="w-[85%] mx-auto p-6 bg-white rounded-lg shadow-lg">
-    <h1 className="text-2xl font-bold mb-4">{exam.title} - Results</h1>
+  <div className="w-[95%] md:w-[85%] mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <h1 className="text-3xl font-bold text-gray-800 mb-4">{exam.title} - Results</h1>
     <p className="text-lg font-semibold text-green-600 mb-6">
       You scored {score} / {exam.examQuestions.length}
     </p>
 
     {exam.examQuestions.map((q, idx) => {
       const isUnanswered = answers[idx] === undefined;
-
       return (
         <div key={idx} className="mb-6 border-b pb-4">
-          <h2 className="text-lg font-semibold mb-2">
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">
             Question {idx + 1}
           </h2>
 
@@ -117,11 +124,12 @@ const ResultsDisplay = ({ exam, answers, score }: ResultsDisplayProps) => (
               alt={`Question ${idx + 1}`}
               width={600}
               height={400}
-              className="rounded mb-3"
+              className="rounded-lg mb-3"
             />
           )}
 
-          <p className="mb-2 font-medium">{q.questionName}</p>
+          <p className="mb-3 text-gray-800 font-medium">{q.questionName}</p>
+
           <ul className="space-y-2">
             {q.choices.map((choice, i) => {
               const isCorrect = choice === q.correctAnswer;
@@ -130,20 +138,24 @@ const ResultsDisplay = ({ exam, answers, score }: ResultsDisplayProps) => (
               return (
                 <li
                   key={i}
-                  className={`px-4 py-2 rounded border ${
+                  className={`px-4 py-2 rounded border transition ${
                     isCorrect
                       ? "bg-green-100 border-green-500"
                       : isUserChoice
                       ? "bg-red-100 border-red-400"
-                      : "bg-white"
+                      : "border-gray-200"
                   }`}
                 >
-                  {choice}
+                  <span>{choice}</span>
                   {isCorrect && (
-                    <span className="ml-2 text-green-600 font-semibold">(Correct)</span>
+                    <span className="ml-2 text-green-700 font-semibold">
+                      (Correct)
+                    </span>
                   )}
                   {isUserChoice && !isCorrect && (
-                    <span className="ml-2 text-red-500 font-medium">(Your Answer)</span>
+                    <span className="ml-2 text-red-500 font-medium">
+                      (Your Answer)
+                    </span>
                   )}
                 </li>
               );
@@ -151,7 +163,9 @@ const ResultsDisplay = ({ exam, answers, score }: ResultsDisplayProps) => (
           </ul>
 
           {isUnanswered && (
-            <p className="mt-2 text-red-600 font-semibold">You did not answer this question.</p>
+            <p className="mt-2 text-red-600 font-semibold">
+              You did not answer this question.
+            </p>
           )}
         </div>
       );
@@ -159,22 +173,15 @@ const ResultsDisplay = ({ exam, answers, score }: ResultsDisplayProps) => (
   </div>
 );
 
-const formatTime = (sec: number) => {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${s < 10 ? "0" + s : s}`;
-};
-
 const TakeExam = () => {
   const { id } = useParams();
-  const [exam, setExam] = useState(null);
-  const [answers, setAnswers] = useState({});
+  const [exam, setExam] = useState<any>(null);
+  const [answers, setAnswers] = useState<{ [key: number]: string }>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
 
-  // Load exam
   useEffect(() => {
     const fetchExam = async () => {
       const res = await fetch(`/api/exams?id=${id}`);
@@ -186,20 +193,18 @@ const TakeExam = () => {
     fetchExam();
   }, [id]);
 
-  // Timer logic
   useEffect(() => {
     if (!timeLeft || showResults) return;
-    const interval = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    const interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     return () => clearInterval(interval);
   }, [timeLeft, showResults]);
 
-  // Auto-submit on time up
   useEffect(() => {
     if (timeLeft === 0 && !showResults) handleSubmit();
   }, [timeLeft]);
 
-  const handleOptionChange = (index, value) => {
-    setAnswers(prev => ({ ...prev, [index]: value }));
+  const handleOptionChange = (index: number, value: string) => {
+    setAnswers((prev) => ({ ...prev, [index]: value }));
   };
 
   const handleSubmit = () => {
@@ -207,7 +212,7 @@ const TakeExam = () => {
     if (!confirmSubmit) return;
 
     let correct = 0;
-    exam.examQuestions.forEach((q, idx) => {
+    exam.examQuestions.forEach((q: Question, idx: number) => {
       if (answers[idx] === q.correctAnswer) correct++;
     });
 
@@ -217,9 +222,9 @@ const TakeExam = () => {
 
   if (!exam) {
     return (
-      <div className="text-center mt-12">
-        <Loader2 className="animate-spin mx-auto" />
-        <p>Loading exam...</p>
+      <div className="flex flex-col items-center justify-center mt-20 text-center">
+        <Loader2 className="animate-spin w-8 h-8 text-gray-600 mb-4" />
+        <p className="text-lg text-gray-700">Loading exam...</p>
       </div>
     );
   }
@@ -237,7 +242,7 @@ const TakeExam = () => {
 
   return (
     <section className="container mx-auto mt-20 py-12 w-full">
-      <div className="w-[70%] mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <div className="w-full md:w-[80%] lg:w-[65%] mx-auto p-6 bg-white rounded-lg shadow-xl">
         <ExamHeader title={exam.title} timeLeft={timeLeft} />
 
         <QuestionDisplay
@@ -248,11 +253,11 @@ const TakeExam = () => {
           onChange={handleOptionChange}
         />
 
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between mt-8">
           <button
-            onClick={() => setCurrentIndex(prev => Math.max(prev - 1, 0))}
+            onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
             disabled={currentIndex === 0}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+            className="px-5 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
           >
             Previous
           </button>
@@ -260,15 +265,17 @@ const TakeExam = () => {
           {currentIndex === totalQuestions - 1 ? (
             <button
               onClick={handleSubmit}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
+              className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
             >
               <CheckCircle className="w-5 h-5" />
               Submit
             </button>
           ) : (
             <button
-              onClick={() => setCurrentIndex(prev => Math.min(prev + 1, totalQuestions - 1))}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              onClick={() =>
+                setCurrentIndex((prev) => Math.min(prev + 1, totalQuestions - 1))
+              }
+              className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Next
             </button>
