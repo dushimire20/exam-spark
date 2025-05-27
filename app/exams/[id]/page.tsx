@@ -4,9 +4,13 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Loader2, Clock, CheckCircle } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 
-const ExamHeader = ({ title, timeLeft }) => (
+type ExamHeaderProps = {
+  title: string;
+  timeLeft: number;
+};
+
+const ExamHeader = ({ title, timeLeft }: ExamHeaderProps) => (
   <div className="flex justify-between items-center mb-6">
     <h1 className="text-2xl font-bold">{title}</h1>
     <div className="flex items-center gap-2 text-red-600 font-semibold">
@@ -16,13 +20,28 @@ const ExamHeader = ({ title, timeLeft }) => (
   </div>
 );
 
+type Question = {
+  questionName: string;
+  image?: string;
+  choices: string[];
+  correctAnswer: string;
+};
+
+type QuestionDisplayProps = {
+  question: Question;
+  index: number;
+  total: number;
+  selected: string;
+  onChange: (index: number, value: string) => void;
+};
+
 const QuestionDisplay = ({
   question,
   index,
   total,
   selected,
   onChange,
-}) => (
+}: QuestionDisplayProps) => (
   <div>
     <h2 className="text-lg font-semibold mb-4">
       Question {index + 1} of {total}
@@ -67,7 +86,16 @@ const QuestionDisplay = ({
   </div>
 );
 
-const ResultsDisplay = ({ exam, answers, score }) => (
+type ResultsDisplayProps = {
+  exam: {
+    title: string;
+    examQuestions: Question[];
+  };
+  answers: { [key: number]: string };
+  score: number;
+};
+
+const ResultsDisplay = ({ exam, answers, score }: ResultsDisplayProps) => (
   <div className="w-[85%] mx-auto p-6 bg-white rounded-lg shadow-lg">
     <h1 className="text-2xl font-bold mb-4">{exam.title} - Results</h1>
     <p className="text-lg font-semibold text-green-600 mb-6">
