@@ -18,7 +18,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 gap-y-10 gap-x-16 sm:grid-cols-2 lg:grid-cols-12 xl:gap-x-8">
           <div className='col-span-4 md:col-span-12 lg:col-span-4'>
              <Image
-                        src="/logo.png"
+                        src="/Logo.png"
                         alt="Logo"
                         width={150}
                         height={60}

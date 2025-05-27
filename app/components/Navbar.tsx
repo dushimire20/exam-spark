@@ -31,7 +31,7 @@ const Navbar = () => {
       <div className="flex items-center justify-between w-[80%] mx-auto py-4 ">
         {/* Logo */}
         <Link href="/" className=" opacity-100 ">
-          <Image src="/logo.png" alt="Logo" width={150} height={60} />
+          <Image src="/Logo.png" alt="Logo" width={150} height={60} />
         </Link>
 
         {/* Desktop Menu */}
