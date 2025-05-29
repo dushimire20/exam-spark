@@ -2,10 +2,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation"; // Import useRouter
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link"; // Import Link
-import { Loader2, Clock, CheckCircle, PlayCircle, Info, RotateCcw, ListChecks, XCircle, Check } from "lucide-react"; // Added more icons
+import Link from "next/link";
+import { Loader2, Clock, CheckCircle, PlayCircle, Info, RotateCcw, ListChecks, XCircle, Check, AlertTriangle } from "lucide-react"; // Added AlertTriangle
+import Modal from "@/app/components/Modal"; // Import Modal
 
 type ExamHeaderProps = {
 	title: string;
@@ -28,84 +29,144 @@ const ExamHeader = ({ title, timeLeft }: ExamHeaderProps) => (
 	</div>
 );
 
+// Updated Question type to match the backend model
 type Question = {
+	_id?: string; // Mongoose subdocument ID
 	questionName: string;
 	image?: string;
 	choices: string[];
-	correctAnswer: string;
+	questionType: 'single' | 'multiple';
+	correctAnswers: string[]; // Changed from correctAnswer
 };
+
+// Updated Exam type for fetched data
+type ExamData = {
+	_id: string;
+	title: string;
+	examQuestions: Question[];
+	duration?: number;
+	picture?: string;
+};
+
 
 type QuestionDisplayProps = {
 	question: Question;
 	index: number;
 	total: number;
-	selected: string;
-	onChange: (index: number, value: string) => void;
+	selectedAnswer: string | string[]; // Can be a single string or an array of strings
+	onAnswerChange: (questionIndex: number, answer: string | string[]) => void;
 };
 
 const QuestionDisplay = ({
 	question,
 	index,
 	total,
-	selected,
-	onChange,
-}: QuestionDisplayProps) => (
-	<div>
-		<h2 className="text-xl font-semibold mb-4 text-gray-700">
-			Question {index + 1} of {total}
-		</h2>
+	selectedAnswer,
+	onAnswerChange,
+}: QuestionDisplayProps) => {
+	const handleSingleChoiceChange = (choice: string) => {
+		onAnswerChange(index, choice);
+	};
 
-		{question.image && (
-			<div className="w-full mb-4">
-				<Image
-					src={question.image}
-					alt={`Question ${index + 1}`}
-					width={600}
-					height={400}
-					className="rounded-lg object-cover"
-				/>
-			</div>
-		)}
+	const handleMultipleChoiceChange = (choice: string, isChecked: boolean) => {
+		const currentAnswers = Array.isArray(selectedAnswer) ? [...selectedAnswer] : [];
+		if (isChecked) {
+			if (!currentAnswers.includes(choice)) {
+				currentAnswers.push(choice);
+			}
+		} else {
+			const choiceIndex = currentAnswers.indexOf(choice);
+			if (choiceIndex > -1) {
+				currentAnswers.splice(choiceIndex, 1);
+			}
+		}
+		onAnswerChange(index, currentAnswers);
+	};
 
-		<p className="mb-4 text-gray-800 text-lg font-medium whitespace-pre-line leading-relaxed">
-			{question.questionName}
-		</p>
+	return (
+		<div>
+			<h2 className="text-xl font-semibold mb-4 text-gray-700">
+				Question {index + 1} of {total}
+			</h2>
+			{question.questionType === 'multiple' && (
+				<p className="text-sm text-gray-500 mb-3">(Select all that apply)</p>
+			)}
 
-		<div className="space-y-3">
-			{question.choices.map((opt, i) => (
-				<label
-					key={i}
-					className={`flex items-center border px-4 py-3 rounded-md whitespace-pre-line cursor-pointer transition ${selected === opt
-						? "bg-blue-50 border-blue-600"
-						: "hover:bg-gray-50 border-gray-300"
-						}`}
-				>
-					<input
-						type="radio"
-						name={`question-${index}`}
-						value={opt}
-						checked={selected === opt}
-						onChange={() => onChange(index, opt)}
-						className="mr-3"
+			{question.image && (
+				<div className="w-full mb-4">
+					<Image
+						src={question.image}
+						alt={`Question ${index + 1}`}
+						width={600}
+						height={400}
+						className="rounded-lg object-cover"
 					/>
-					<span className="text-gray-700 font-medium">{opt}</span>
-				</label>
-			))}
+				</div>
+			)}
+
+			<p className="mb-4 text-gray-800 text-lg font-medium whitespace-pre-line leading-relaxed">
+				{question.questionName}
+			</p>
+
+			<div className="space-y-3">
+				{question.choices.map((opt, i) => {
+					if (question.questionType === 'single') {
+						const isSelected = selectedAnswer === opt;
+						return (
+							<label
+								key={i}
+								className={`flex items-center border px-4 py-3 rounded-md whitespace-pre-line cursor-pointer transition ${isSelected
+									? "bg-blue-50 border-blue-600"
+									: "hover:bg-gray-50 border-gray-300"
+									}`}
+							>
+								<input
+									type="radio"
+									name={`question-${index}`}
+									value={opt}
+									checked={isSelected}
+									onChange={() => handleSingleChoiceChange(opt)}
+									className="mr-3"
+								/>
+								<span className="text-gray-700 font-medium">{opt}</span>
+							</label>
+						);
+					} else { // multiple
+						const isSelected = Array.isArray(selectedAnswer) && selectedAnswer.includes(opt);
+						return (
+							<label
+								key={i}
+								className={`flex items-center border px-4 py-3 rounded-md whitespace-pre-line cursor-pointer transition ${isSelected
+									? "bg-blue-50 border-blue-600"
+									: "hover:bg-gray-50 border-gray-300"
+									}`}
+							>
+								<input
+									type="checkbox"
+									name={`question-${index}-${i}`}
+									value={opt}
+									checked={isSelected}
+									onChange={(e) => handleMultipleChoiceChange(opt, e.target.checked)}
+									className="mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+								/>
+								<span className="text-gray-700 font-medium">{opt}</span>
+							</label>
+						);
+					}
+				})}
+			</div>
 		</div>
-	</div>
-);
+	);
+};
+
 
 type ResultsDisplayProps = {
-	exam: {
-		title: string;
-		examQuestions: Question[];
-		duration?: number; // duration is now a number (minutes)
-	};
-	answers: { [key: number]: string };
+	exam: ExamData; // Use updated ExamData type
+	answers: { [key: number]: string | string[] }; // Answers can be string or string array
 	score: number;
-	timeTaken: number; // New prop
-	totalDuration: number; // New prop
-	onRetakeExam: () => void; // New prop
+	timeTaken: number;
+	totalDuration: number;
+	onRetakeExam: () => void;
 };
 
 const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onRetakeExam }: ResultsDisplayProps) => {
@@ -138,15 +199,25 @@ const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onReta
 
 
 			{exam.examQuestions.map((q, idx) => {
-				const isUnanswered = answers[idx] === undefined;
 				const userAnswer = answers[idx];
-				const isCorrectUserAnswer = userAnswer === q.correctAnswer;
+				const isUnanswered = userAnswer === undefined || (Array.isArray(userAnswer) && userAnswer.length === 0);
+				let isCorrectUserAnswer = false;
+
+				if (!isUnanswered) {
+					if (q.questionType === 'single') {
+						isCorrectUserAnswer = userAnswer === q.correctAnswers[0];
+					} else { // multiple
+						const sortedUserAnswers = Array.isArray(userAnswer) ? [...userAnswer].sort() : [];
+						const sortedCorrectAnswers = [...q.correctAnswers].sort();
+						isCorrectUserAnswer = JSON.stringify(sortedUserAnswers) === JSON.stringify(sortedCorrectAnswers);
+					}
+				}
 
 				return (
 					<div key={idx} className="mb-6 border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
 						<div className="flex justify-between items-start mb-2">
 							<h2 className="text-lg sm:text-xl font-semibold text-gray-700">
-								Question {idx + 1}
+								Question {idx + 1} ({q.questionType === 'multiple' ? 'Multiple Choice' : 'Single Choice'})
 							</h2>
 							{isUnanswered ? (
 								<span className="flex items-center text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
@@ -177,15 +248,24 @@ const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onReta
 
 						<ul className="space-y-2">
 							{q.choices.map((choice, i) => {
-								const isCorrectChoice = choice === q.correctAnswer;
-								const isUserSelectedChoice = choice === userAnswer;
+								const isCorrectChoice = q.correctAnswers.includes(choice);
+								let isUserSelectedChoice = false;
+								if (q.questionType === 'single') {
+									isUserSelectedChoice = choice === userAnswer;
+								} else {
+									isUserSelectedChoice = Array.isArray(userAnswer) && userAnswer.includes(choice);
+								}
 
-								let itemClass = "border-gray-200 bg-gray-50"; // Default
+								let itemClass = "border-gray-200 bg-gray-50";
 								if (isCorrectChoice) {
 									itemClass = "border-green-500 bg-green-50 text-green-800";
 								}
 								if (isUserSelectedChoice && !isCorrectChoice) {
 									itemClass = "border-red-400 bg-red-50 text-red-800";
+								}
+								// If it's a correct choice and user selected it (for multiple choice, this is handled by the green above)
+								if (isUserSelectedChoice && isCorrectChoice && q.questionType === 'multiple') {
+									itemClass = "border-green-500 bg-green-50 text-green-800";
 								}
 
 
@@ -194,7 +274,7 @@ const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onReta
 										key={i}
 										className={`px-4 py-3 rounded-md border transition flex items-center justify-between text-sm ${itemClass}`}
 									>
-										<span>{choice}</span>
+										<span className="whitespace-pre-line">{choice}</span>
 										<div className="flex items-center">
 											{isUserSelectedChoice && (
 												<span className={`text-xs font-semibold mr-2 ${isCorrectChoice ? 'text-green-700' : 'text-red-600'}`}>
@@ -210,13 +290,13 @@ const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onReta
 						</ul>
 						{!isUnanswered && !isCorrectUserAnswer && (
 							<p className="mt-2 text-sm text-green-700">
-								Correct Answer: <span className="font-semibold">{q.correctAnswer}</span>
+								Correct Answer(s): <span className="font-semibold">{q.correctAnswers.join(", ")}</span>
 							</p>
 						)}
 
 						{isUnanswered && (
 							<p className="mt-2 text-sm text-red-600 font-semibold">
-								You did not answer this question. The correct answer was: <span className="font-bold">{q.correctAnswer}</span>
+								You did not answer this question. The correct answer(s) was/were: <span className="font-bold">{q.correctAnswers.join(", ")}</span>
 							</p>
 						)}
 					</div>
@@ -245,11 +325,7 @@ const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onReta
 };
 
 type PreExamScreenProps = {
-	exam: {
-		title: string;
-		examQuestions: Question[];
-		duration?: number; // duration is now a number (minutes)
-	};
+	exam: ExamData; // Use updated ExamData type
 	onStartExam: () => void;
 };
 
@@ -288,18 +364,38 @@ const PreExamScreen = ({ exam, onStartExam }: PreExamScreenProps) => {
 	);
 };
 
+// Define ModalState type, similar to CreateExam page
+type ConfirmButtonType = 'default' | 'danger' | 'success';
+interface ModalState {
+	isOpen: boolean;
+	title: string;
+	message: string;
+	onConfirm?: () => void;
+	confirmText?: string;
+	isConfirmation: boolean; // To differentiate between info and confirmation modals
+	confirmButtonType?: ConfirmButtonType;
+}
+
+
 const TakeExam = () => {
 	const { id } = useParams();
-	const router = useRouter(); // Initialize router
-	const [exam, setExam] = useState<any>(null); // Consider defining a more specific type for exam
-	const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+	const router = useRouter();
+	const [exam, setExam] = useState<ExamData | null>(null);
+	const [answers, setAnswers] = useState<{ [key: number]: string | string[] }>({});
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [timeLeft, setTimeLeft] = useState(0);
-	const [initialDuration, setInitialDuration] = useState(0); // New state for total duration
+	const [initialDuration, setInitialDuration] = useState(0);
 	const [showResults, setShowResults] = useState(false);
 	const [score, setScore] = useState(0);
-	const [examStarted, setExamStarted] = useState(false); // New state
-	const [isLoading, setIsLoading] = useState(true); // For initial data loading
+	const [examStarted, setExamStarted] = useState(false);
+	const [isLoading, setIsLoading] = useState(true);
+	const [skippedQuestionWarning, setSkippedQuestionWarning] = useState<string>(""); // For skip warning
+	const [modalState, setModalState] = useState<ModalState>({ // For confirmation modal
+		isOpen: false,
+		title: "",
+		message: "",
+		isConfirmation: false,
+	});
 
 	useEffect(() => {
 		const fetchExam = async () => {
@@ -308,8 +404,17 @@ const TakeExam = () => {
 				const res = await fetch(`/api/exams?id=${id}`);
 				const data = await res.json();
 				if (data.exam) {
-					setExam(data.exam);
-					const mins = data.exam.duration || 30; // Use fetched duration, default to 30
+					// Ensure correctAnswers is always an array, even if old data has correctAnswer
+					const processedExam = {
+						...data.exam,
+						examQuestions: data.exam.examQuestions.map((q: any) => ({
+							...q,
+							questionType: q.questionType || 'single',
+							correctAnswers: q.correctAnswers || (q.correctAnswer ? [q.correctAnswer] : []),
+						})),
+					};
+					setExam(processedExam);
+					const mins = processedExam.duration || 30;
 					setTimeLeft(mins * 60);
 					setInitialDuration(mins * 60); // Store initial duration
 				} else {
@@ -343,26 +448,110 @@ const TakeExam = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [timeLeft, examStarted, showResults]);
 
-	const handleOptionChange = (index: number, value: string) => {
-		setAnswers((prev) => ({ ...prev, [index]: value }));
+	const openModal = (
+		title: string,
+		message: string,
+		onConfirm?: () => void,
+		confirmText?: string,
+		confirmButtonType: ConfirmButtonType = 'default'
+	) => {
+		setModalState({
+			isOpen: true,
+			title,
+			message,
+			onConfirm,
+			confirmText,
+			isConfirmation: !!onConfirm,
+			confirmButtonType,
+		});
 	};
 
-	const handleSubmit = (autoSubmit = false) => {
-		if (!autoSubmit) {
-			const confirmSubmit = window.confirm("Are you sure you want to submit your exam?");
-			if (!confirmSubmit) return;
-		}
+	const closeModal = () => {
+		setModalState({ isOpen: false, title: "", message: "", isConfirmation: false });
+	};
 
+	const handleOptionChange = (questionIndex: number, answer: string | string[]) => {
+		setAnswers((prev) => ({ ...prev, [questionIndex]: answer }));
+		if (skippedQuestionWarning) { // Clear warning if user answers
+			setSkippedQuestionWarning("");
+		}
+	};
+
+	const proceedToSubmit = () => {
 		let correct = 0;
-		exam.examQuestions.forEach((q: Question, idx: number) => {
-			if (answers[idx] === q.correctAnswer) correct++;
+		exam?.examQuestions.forEach((q: Question, idx: number) => {
+			const userAnswer = answers[idx];
+			if (userAnswer === undefined || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
+				return;
+			}
+
+			if (q.questionType === 'single') {
+				if (userAnswer === q.correctAnswers[0]) {
+					correct++;
+				}
+			} else {
+				if (Array.isArray(userAnswer)) {
+					const sortedUserAnswers = [...userAnswer].sort();
+					const sortedCorrectAnswers = [...q.correctAnswers].sort();
+					if (JSON.stringify(sortedUserAnswers) === JSON.stringify(sortedCorrectAnswers)) {
+						correct++;
+					}
+				}
+			}
 		});
 
 		setScore(correct);
 		setShowResults(true);
-		// Time taken is initialDuration - timeLeft (at the moment of submission)
-		// This will be passed to ResultsDisplay
 	};
+
+
+	const handleSubmit = (autoSubmit = false) => {
+		if (autoSubmit) { // Auto-submit due to timer
+			proceedToSubmit();
+			return;
+		}
+
+		let unansweredQuestionsCount = 0;
+		exam?.examQuestions.forEach((_, idx) => {
+			const userAnswer = answers[idx];
+			if (userAnswer === undefined || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
+				unansweredQuestionsCount++;
+			}
+		});
+
+		let confirmationMessage = "Are you sure you want to submit your exam?";
+		if (unansweredQuestionsCount > 0) {
+			confirmationMessage = `You have ${unansweredQuestionsCount} unanswered question(s). Are you sure you want to submit?`;
+		}
+
+		openModal(
+			"Confirm Submission",
+			confirmationMessage,
+			() => {
+				proceedToSubmit();
+				// closeModal is called by Modal component onConfirm
+			},
+			"Submit Exam",
+			unansweredQuestionsCount > 0 ? 'danger' : 'success' // Use danger if skipping, success otherwise
+		);
+	};
+
+	const handleNextQuestion = () => {
+		const currentAnswer = answers[currentIndex];
+		if (currentAnswer === undefined || (Array.isArray(currentAnswer) && currentAnswer.length === 0)) {
+			setSkippedQuestionWarning("You've skipped this question. You can come back to it later.");
+			setTimeout(() => setSkippedQuestionWarning(""), 3000); // Clear warning after 3 seconds
+		} else {
+			setSkippedQuestionWarning(""); // Clear warning if question was answered before moving
+		}
+		setCurrentIndex((prev) => Math.min(prev + 1, (exam?.examQuestions.length || 0) - 1));
+	};
+
+	const handlePreviousQuestion = () => {
+		setSkippedQuestionWarning(""); // Clear warning when navigating back
+		setCurrentIndex((prev) => Math.max(prev - 1, 0));
+	};
+
 
 	const handleStartExam = () => {
 		setExamStarted(true);
@@ -425,48 +614,64 @@ const TakeExam = () => {
 	const currentQuestion = exam.examQuestions[currentIndex];
 
 	return (
-		<section className="container mx-auto mt-16 sm:mt-20 py-8 sm:py-12 w-full px-4">
-			<div className="w-full md:w-[80%] lg:w-[65%] mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-xl">
-				<ExamHeader title={exam.title} timeLeft={timeLeft} />
+		<>
+			<Modal
+				isOpen={modalState.isOpen}
+				onClose={closeModal}
+				title={modalState.title}
+				message={modalState.message}
+				onConfirm={modalState.onConfirm}
+				confirmText={modalState.confirmText}
+				confirmButtonType={modalState.confirmButtonType}
+			/>
+			<section className="container mx-auto mt-16 sm:mt-20 py-8 sm:py-12 w-full px-4">
+				<div className="w-full md:w-[80%] lg:w-[65%] mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-xl">
+					<ExamHeader title={exam.title} timeLeft={timeLeft} />
 
-				<QuestionDisplay
-					question={currentQuestion}
-					index={currentIndex}
-					total={totalQuestions}
-					selected={answers[currentIndex]}
-					onChange={handleOptionChange}
-				/>
-
-				<div className="flex justify-between mt-8">
-					<button
-						onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
-						disabled={currentIndex === 0}
-						className="px-5 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
-					>
-						Previous
-					</button>
-
-					{currentIndex === totalQuestions - 1 ? (
-						<button
-							onClick={handleSubmit}
-							className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
-						>
-							<CheckCircle className="w-5 h-5" />
-							Submit
-						</button>
-					) : (
-						<button
-							onClick={() =>
-								setCurrentIndex((prev) => Math.min(prev + 1, totalQuestions - 1))
-							}
-							className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-						>
-							Next
-						</button>
+					{skippedQuestionWarning && (
+						<div className="mb-4 p-3 bg-yellow-100 border border-yellow-300 text-yellow-700 rounded-md flex items-center">
+							<AlertTriangle className="w-5 h-5 mr-2" />
+							{skippedQuestionWarning}
+						</div>
 					)}
+
+					<QuestionDisplay
+						question={currentQuestion}
+						index={currentIndex}
+						total={totalQuestions}
+						selectedAnswer={answers[currentIndex]}
+						onAnswerChange={handleOptionChange}
+					/>
+
+					<div className="flex justify-between mt-8">
+						<button
+							onClick={handlePreviousQuestion}
+							disabled={currentIndex === 0}
+							className="px-5 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+						>
+							Previous
+						</button>
+
+						{currentIndex === totalQuestions - 1 ? (
+							<button
+								onClick={() => handleSubmit(false)} // Explicitly pass false for manual submission
+								className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
+							>
+								<CheckCircle className="w-5 h-5" />
+								Submit
+							</button>
+						) : (
+							<button
+								onClick={handleNextQuestion}
+								className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+							>
+								Next
+							</button>
+						)}
+					</div>
 				</div>
-			</div>
-		</section>
+			</section>
+		</>
 	);
 };
 
