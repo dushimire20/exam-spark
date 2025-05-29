@@ -93,7 +93,7 @@ const Navbar = () => {
 						animate={{ x: 0 }}
 						exit={{ x: "100%" }}
 						transition={{ type: "spring", stiffness: 300, damping: 30 }}
-						className="fixed top-0 right-0 z-40 h-full w-64 bg-white shadow-xl"
+						className="fixed top-0 right-0 z-40 h-full w-64 bg-white shadow-xl flex flex-col"
 					>
 						<div className="flex justify-end p-6">
 							<button onClick={() => setIsMenuToggled(false)} aria-label="Close menu">
@@ -101,31 +101,39 @@ const Navbar = () => {
 							</button>
 						</div>
 
-						<div className="flex flex-col items-center gap-6 mt-8 text-lg font-medium text-gray-800">
+						{/* Auth items at the top for mobile */}
+						<div className="flex flex-col items-center gap-4 mb-6 px-4">
+							<SignedIn>
+								<UserButton afterSignOutUrl="/" />
+							</SignedIn>
+							<SignedOut>
+								<Link href="/sign-in" className="w-full text-center py-2 hover:bg-gray-100 rounded-md">Sign In</Link>
+								<Link
+									href="/sign-up"
+									className="w-full text-center py-2 bg-primary text-white rounded-md hover:bg-accent transition flex items-center justify-center gap-1"
+								>
+									Open an Account <ArrowUpRight size={18} />
+								</Link>
+							</SignedOut>
+						</div>
+
+						{/* Divider */}
+						{(menuItems.length > 0) && (
+							<hr className="border-gray-200 mx-4 mb-4" />
+						)}
+
+						{/* Navigation items */}
+						<div className="flex flex-col items-center gap-6 text-lg font-medium text-gray-800 px-4">
 							{menuItems.map((item) => (
 								<Link
 									key={item.href}
 									href={item.href}
-									className={`${pathname === item.href ? "text-accent font-semibold" : ""
+									className={`w-full text-center py-2 hover:bg-gray-100 rounded-md ${pathname === item.href ? "text-accent font-semibold bg-gray-50" : ""
 										}`}
 								>
 									{item.label}
 								</Link>
 							))}
-
-							<SignedOut>
-								<Link href="/sign-in">Sign In</Link>
-								<Link
-									href="/sign-up"
-									className="flex items-center gap-1 text-primary hover:text-accent"
-								>
-									Open an Account <ArrowUpRight size={18} />
-								</Link>
-							</SignedOut>
-
-							<SignedIn>
-								<UserButton afterSignOutUrl="/" />
-							</SignedIn>
 						</div>
 					</motion.div>
 				)}

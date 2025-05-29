@@ -47,11 +47,11 @@ const app = () => {
 
 			</div>
 
-			<div className="w-full bg-white py-8 sm:py-10">
+			{/* <div className="w-full bg-white py-8 sm:py-10">
 				<div className="container mx-auto lg:max-w-screen-xl md:max-w-screen-md px-4 sm:px-6 md:px-8">
 					<Companies />
 				</div>
-			</div>
+			</div> */}
 
 			<div className="w-full bg-white py-8 sm:py-10">
 				<div className="container mx-auto px-4 sm:px-6 md:px-8">
