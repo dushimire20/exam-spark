@@ -18,9 +18,9 @@ const app = () => {
 						</div>
 						<h1 className='text-primary text-3xl sm:text-4xl lg:text-5xl font-semibold pt-3 lg:pt-0 text-center lg:text-start'>Advance your engineering skills with us.</h1>
 						<h3 className='text-black/70 text-base sm:text-lg pt-3 lg:pt-0 text-center lg:text-start'>Build skills with our practice exams, courses and mentor from world-class companies.</h3>
-						<div className="relative rounded-full pt-3 lg:pt-0 text-center">
+						<div className="relative rounded-full text-center">
 							<input type="Email address" name="q" className="py-4 sm:py-6 lg:py-8 pl-6 pr-16 sm:pl-8 sm:pr-20 text-sm sm:text-base lg:text-lg w-full text-primary rounded-full focus:outline-none shadow-2xl" placeholder="search exams..." autoComplete="off" />
-							<Link href="/" className="bg-secondary p-3 sm:p-4 lg:p-5 rounded-full absolute right-1 top-1 sm:right-2 sm:top-2 ">
+							<Link href="/" className="bg-secondary p-3 sm:p-4 lg:p-5 rounded-full absolute right-1 sm:right-2 top-1/2 -translate-y-1/2">
 								<SearchCheck className="text-white text-2xl sm:text-3xl lg:text-4xl inline-block" />
 							</Link>
 						</div>
