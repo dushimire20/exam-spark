@@ -12,6 +12,7 @@ const examSchema = new mongoose.Schema({
 	title: { type: String, required: true },
 	picture: String,
 	examQuestions: [questionSchema],
+	duration: { type: Number, default: 30 },
 }, { timestamps: true });
 
 export const Exam = mongoose.models.Exam || mongoose.model("Exam", examSchema);
