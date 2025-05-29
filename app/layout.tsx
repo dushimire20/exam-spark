@@ -23,9 +23,9 @@ export const metadata: Metadata = {
 	title: 'Exam Spark',
 	description: 'A platform for creating and taking exams',
 	icons: {
-		icon: '/Logo.png',
-		shortcut: '/Logo.png',
-		apple: '/Logo.png',
+		icon: '/brand.png',
+		shortcut: '/brand.png',
+		apple: '/brand.png',
 	},
 	openGraph: {
 		title: 'Exam Spark',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
 		card: 'summary_large_image',
 		title: 'Exam Spark',
 		description: 'A platform for creating and taking exams',
-		images: '/logo.png',
+		images: '/Logo.png',
 		creator: '@exam_spark',
 	},
 

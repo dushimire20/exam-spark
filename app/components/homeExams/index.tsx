@@ -25,13 +25,13 @@ const Exams = () => {
 
 	return (
 		<section id="courses">
-			<div className='container mx-auto lg:max-w-screen-xl md:max-w-screen-md px-0 sm:px-4'> {/* Adjusted px for container */}
+			<div className='container mx-auto lg:max-w-screen-xl md:max-w-screen-md px-0 sm:px-4'>
 				<div className="sm:flex justify-between items-center mb-10 sm:mb-16 lg:mb-20">
 					<h2 className="text-midnight_text text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-semibold mb-3 sm:mb-0 text-center sm:text-left">Popular Exams.</h2>
 					<Link href={'/'} className="text-primary text-sm sm:text-base lg:text-lg font-medium hover:tracking-widest duration-500 block text-center sm:text-right">Explore exams&nbsp;&gt;&nbsp;</Link>
 				</div>
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-					{exams.map((exam: any) => ( // Added type 'any' for exam, consider defining a proper type
+					{exams.map((exam) => (
 						<div
 							key={exam._id}
 							className="bg-white rounded-2xl shadow-lg overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-xl duration-300"

@@ -107,7 +107,7 @@ const Footer = () => {
 						</div>
 						<div className="flex items-start gap-2 sm:gap-3">
 							<PhoneOutgoing className="text-accent w-4 h-4 sm:w-auto" />
-							<span>+250 784 861 255</span>
+							<span>+250 784 861 255 / +250 789 912 852</span>
 						</div>
 						<div className="flex items-start gap-2 sm:gap-3">
 							<Folders className="text-accent w-4 h-4 sm:w-auto" />
@@ -119,7 +119,7 @@ const Footer = () => {
 				{/* Bottom bar */}
 				<div className="mt-8 sm:mt-12 border-t border-gray-200 pt-4 sm:pt-6 flex flex-col text-center sm:flex-row items-center justify-between text-xs sm:text-sm text-black/50 gap-3 sm:gap-4">
 					<p>&copy; 2025 ExamSpark. All rights reserved.</p>
-					<div className="flex flex-col xs:flex-row gap-2 sm:gap-4">
+					<div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
 						<Link href="#" className="hover:text-primary">
 							Privacy Policy
 						</Link>
@@ -129,8 +129,12 @@ const Footer = () => {
 					</div>
 					<p>
 						Distributed by{" "}
-						<Link href="/" className="hover:text-primary">
+						<Link href="tel:+250784861255" className="hover:text-primary">
 							Oscar Dushimire
+						</Link>
+						{" & "}
+						<Link href="tel:+250789912852" className="hover:text-primary">
+							Jean Lionel Ndabaga
 						</Link>
 					</p>
 				</div>
