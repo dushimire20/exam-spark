@@ -45,7 +45,7 @@ const AvailableExams = () => {
 
 	return (
 		<div className="container mx-auto mt-20 px-4 py-12 lg:max-w-screen-xl min-h-screen"> {/* Added min-h-screen for better layout during loading/empty states */}
-			<h1 className="text-primary text-3xl sm:text-4xl md:text-5xl font-semibold text-center mb-10 md:mb-12">
+			<h1 className="text-[#6B6C65] text-3xl sm:text-4xl md:text-5xl font-semibold text-center mb-10 md:mb-12">
 				Available Exams
 			</h1>
 

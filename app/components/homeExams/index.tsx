@@ -49,8 +49,8 @@ const Exams = () => {
 		<section id="courses">
 			<div className='container mx-auto lg:max-w-screen-xl md:max-w-screen-md px-4'>
 				<div className="flex flex-col items-center text-center sm:flex-row sm:justify-between sm:items-center sm:text-left mb-10 sm:mb-14 md:mb-20">
-					<h2 className="text-midnight_text text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 sm:mb-0">Popular Exams.</h2>
-					<Link href={'/exams'} className="text-primary text-base sm:text-lg font-medium hover:tracking-widest duration-500">Explore exams&nbsp;&gt;&nbsp;</Link>
+					<h2 className="text-[#6B6C65] text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 sm:mb-0">Popular Exams.</h2>
+					<Link href={'/exams'} className="text-[#6B6C65] text-base sm:text-lg font-medium hover:tracking-widest duration-500">Explore exams&nbsp;&gt;&nbsp;</Link>
 				</div>
 
 				{isLoading ? (
