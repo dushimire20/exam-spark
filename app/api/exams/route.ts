@@ -14,7 +14,6 @@ export const config = {
 export async function POST(request: NextRequest) {
 	try {
 		await dbConnect();
-		// Add this log to check the schema Mongoose is using
 		console.log("Runtime Exam schema paths:", Object.keys(Exam.schema.paths));
 
 		const body = await request.json();
@@ -22,7 +21,7 @@ export async function POST(request: NextRequest) {
 		const { title, pictureBase64, examQuestions, duration } = body;
 		console.log("API POST /api/exams - Destructured duration:", duration);
 
-		if (!title || !Array.isArray(examQuestions)) { // pictureBase64 can be optional if we allow exams without cover
+		if (!title || !Array.isArray(examQuestions)) {
 			return new Response(JSON.stringify({ message: 'Missing or invalid input data for title or questions' }), { status: 400 });
 		}
 
@@ -38,30 +37,34 @@ export async function POST(request: NextRequest) {
 		}
 
 
-		const updatedQuestions = await Promise.all(
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			examQuestions.map(async (q: any) => {
-				if (q.image && typeof q.image === 'string' && q.image.startsWith('data:image')) { // New image to upload
+		const processedExamQuestions = await Promise.all(
+			examQuestions.map(async (q) => {
+				let imageUrl = q.image;
+				if (q.image && typeof q.image === 'string' && q.image.startsWith('data:image')) {
 					try {
 						const uploadedQuestionImg = await cloudinary.uploader.upload(q.image, {
 							folder: 'exam-questions'
 						});
-						q.image = uploadedQuestionImg.secure_url;
+						imageUrl = uploadedQuestionImg.secure_url;
 					} catch (err) {
 						console.error(`Failed to upload question image for: ${q.questionName || 'unnamed question'}`, err);
-						q.image = undefined; // Or handle error as needed
+						imageUrl = undefined;
 					}
 				}
-				// If q.image is already a URL (from edit mode, no change), it will be passed as is.
-				// If q.image is undefined, it means no image or image removed.
-				return q;
+				return {
+					questionName: q.questionName,
+					choices: q.choices,
+					correctAnswers: q.correctAnswers || [], // Ensure it's an array
+					questionType: q.questionType || 'single', // Default to single
+					image: imageUrl,
+				};
 			})
 		);
 
 		const examDataToSave = {
 			title,
 			picture: uploadedPictureSecureUrl,
-			examQuestions: updatedQuestions,
+			examQuestions: processedExamQuestions, // Use processed questions
 			duration: duration !== undefined && duration !== null && !isNaN(parseInt(String(duration))) ? parseInt(String(duration)) : 30,
 		};
 		console.log("API POST /api/exams - Exam data to save:", examDataToSave);
@@ -112,7 +115,6 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
 	try {
 		await dbConnect();
-		// Add this log to check the schema Mongoose is using
 		console.log("Runtime Exam schema paths (PUT):", Object.keys(Exam.schema.paths));
 
 		const { searchParams } = new URL(request.url);
@@ -133,7 +135,7 @@ export async function PUT(request: NextRequest) {
 		console.log("API PUT /api/exams - Destructured duration:", duration);
 
 
-		let pictureToUpdate = existingExam.picture; // Default to existing picture
+		let pictureToUpdate = existingExam.picture;
 
 		if (pictureBase64 && pictureBase64.startsWith('data:image')) {
 			// New image uploaded, upload to Cloudinary
@@ -150,37 +152,41 @@ export async function PUT(request: NextRequest) {
 		// If existingPictureURL is provided and no new pictureBase64, pictureToUpdate remains existingExam.picture (implicitly handled)
 
 
-		const updatedQuestions = await Promise.all(
+		const processedExamQuestions = await Promise.all(
 			(examQuestions || []).map(async (q: any) => {
-				let imageToUpdate = q.image; // This could be an existing URL or undefined
+				let imageToUpdate = q.image;
 				if (q.image && typeof q.image === 'string' && q.image.startsWith('data:image')) {
-					// New image for this question
 					const uploadedQuestionImg = await cloudinary.uploader.upload(q.image, {
 						folder: 'exam-questions'
 					});
 					imageToUpdate = uploadedQuestionImg.secure_url;
-				} else if (q.image === undefined) {
-					// Image was removed for this question
+				} else if (q.image === undefined && q.imageURL === undefined) { // Explicitly removed
 					imageToUpdate = undefined;
+				} else if (q.imageURL) { // Existing image URL, no new file
+					imageToUpdate = q.imageURL;
 				}
-				// If q.image is an existing URL, it's passed as is, so imageToUpdate is already correct.
+				// If q.image is already a URL (e.g. from a previous save and no change), it's passed as is.
 				return {
-					...q,
+					questionName: q.questionName,
+					choices: q.choices,
+					correctAnswers: q.correctAnswers || [],
+					questionType: q.questionType || 'single',
 					image: imageToUpdate,
+					// _id: q._id // Preserve _id if present for subdocument updates, Mongoose handles this
 				};
 			})
 		);
 
 		existingExam.title = title || existingExam.title;
 		existingExam.picture = pictureToUpdate;
-		existingExam.examQuestions = updatedQuestions;
+		existingExam.examQuestions = processedExamQuestions; // Use processed questions
 
 		if (duration !== undefined && duration !== null && !isNaN(parseInt(String(duration)))) {
 			existingExam.duration = parseInt(String(duration));
 		}
 		// No 'else' needed here; if duration is not provided or invalid, existingExam.duration remains unchanged or uses schema default if applicable on a new field.
 
-		console.log("API PUT /api/exams - Exam data to update (before save):", { _id: existingExam._id, title: existingExam.title, duration: existingExam.duration });
+		console.log("API PUT /api/exams - Exam data to update (before save):", { _id: existingExam._id, title: existingExam.title, duration: existingExam.duration, examQuestions: existingExam.examQuestions });
 
 		await existingExam.save();
 		console.log("API PUT /api/exams - Updated exam:", existingExam);

@@ -8,9 +8,11 @@ import { Loader2 } from "lucide-react"; // Import Loader2 icon
 interface Question {
 	questionText: string;
 	choices: string[];
-	correctAnswer: string;
+	// correctAnswer: string; // Old field
+	correctAnswers: string[]; // New field for one or more correct answers
 	image?: File | null;
 	imageURL?: string; // To store existing image URL in edit mode
+	questionType: 'single' | 'multiple'; // New field
 }
 
 type ConfirmButtonType = 'default' | 'danger' | 'success';
@@ -36,7 +38,7 @@ const CreateExam: React.FC = () => {
 	const [existingExamImageURL, setExistingExamImageURL] = useState<string | null>(null);
 	const [duration, setDuration] = useState<number>(30); // Duration in minutes
 	const [questions, setQuestions] = useState<Question[]>([
-		{ questionText: "", choices: ["", ""], correctAnswer: "", image: null, imageURL: undefined },
+		{ questionText: "", choices: ["", ""], correctAnswers: [], image: null, imageURL: undefined, questionType: 'single' },
 	]);
 	const [loading, setLoading] = useState(false);
 	const [pageLoading, setPageLoading] = useState(isEditMode); // For loading exam data in edit mode
@@ -60,13 +62,15 @@ const CreateExam: React.FC = () => {
 					if (data.exam) {
 						setTitle(data.exam.title);
 						setExistingExamImageURL(data.exam.picture || null);
-						setDuration(data.exam.duration || 30); // Set duration from fetched data
+						setDuration(data.exam.duration || 30);
 						setQuestions(data.exam.examQuestions.map((q: any) => ({
 							questionText: q.questionName,
 							choices: q.choices,
-							correctAnswer: q.correctAnswer,
-							image: null, // File object will be null initially
-							imageURL: q.image || undefined, // Store existing image URL
+							// Handle backward compatibility for correctAnswer vs correctAnswers
+							correctAnswers: q.correctAnswers && q.correctAnswers.length > 0 ? q.correctAnswers : (q.correctAnswer ? [q.correctAnswer] : []),
+							image: null,
+							imageURL: q.image || undefined,
+							questionType: q.questionType || 'single', // Default to single if not present
 						})));
 					} else {
 						throw new Error("Exam not found.");
@@ -110,34 +114,61 @@ const CreateExam: React.FC = () => {
 	const handleQuestionChange = (
 		index: number,
 		field: keyof Question,
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		value: any
 	) => {
 		const newQuestions = [...questions];
-		if (field === 'image' && value === null) { // If image is removed
-			newQuestions[index].imageURL = undefined; // Clear existing image URL as well
+		if (field === 'image' && value === null) {
+			newQuestions[index].imageURL = undefined;
+		}
+		// When changing question type, reset correct answers
+		if (field === 'questionType') {
+			newQuestions[index].correctAnswers = [];
 		}
 		newQuestions[index][field] = value;
 		setQuestions(newQuestions);
 	};
 
+	const handleCorrectAnswerChange = (qIndex: number, choiceValue: string, isChecked?: boolean) => {
+		const newQuestions = [...questions];
+		const question = newQuestions[qIndex];
+		if (question.questionType === 'single') {
+			question.correctAnswers = [choiceValue];
+		} else { // 'multiple'
+			const currentCorrectAnswers = question.correctAnswers || [];
+			if (isChecked) {
+				if (!currentCorrectAnswers.includes(choiceValue)) {
+					question.correctAnswers = [...currentCorrectAnswers, choiceValue];
+				}
+			} else {
+				question.correctAnswers = currentCorrectAnswers.filter(ans => ans !== choiceValue);
+			}
+		}
+		setQuestions(newQuestions);
+	};
+
+
 	const handleChoiceChange = (qIndex: number, cIndex: number, value: string) => {
 		const newQuestions = [...questions];
+		const oldChoiceValue = newQuestions[qIndex].choices[cIndex];
 		newQuestions[qIndex].choices[cIndex] = value;
-		// If the edited choice was the correct answer, update the correct answer value as well
-		if (newQuestions[qIndex].correctAnswer === questions[qIndex].choices[cIndex] && value !== "") {
-			newQuestions[qIndex].correctAnswer = value;
-		} else if (value === "" && newQuestions[qIndex].correctAnswer === questions[qIndex].choices[cIndex]) {
-			// If choice is cleared and it was the correct answer, reset correct answer
-			newQuestions[qIndex].correctAnswer = "";
+
+		// Update correctAnswers if the changed choice was part of it
+		const correctAnswers = newQuestions[qIndex].correctAnswers;
+		if (correctAnswers.includes(oldChoiceValue)) {
+			newQuestions[qIndex].correctAnswers = correctAnswers.map(ans => ans === oldChoiceValue ? value : ans).filter(ans => ans !== ""); // Filter out empty if value becomes empty
 		}
+		// If choice becomes empty and it was the only correct answer for single type, clear correctAnswers
+		if (newQuestions[qIndex].questionType === 'single' && value === "" && correctAnswers.length === 1 && correctAnswers[0] === oldChoiceValue) {
+			newQuestions[qIndex].correctAnswers = [];
+		}
+
 		setQuestions(newQuestions);
 	};
 
 	const addQuestion = () => {
 		setQuestions([
 			...questions,
-			{ questionText: "", choices: ["", ""], correctAnswer: "", image: null, imageURL: undefined },
+			{ questionText: "", choices: ["", ""], correctAnswers: [], image: null, imageURL: undefined, questionType: 'single' },
 		]);
 	};
 
@@ -161,15 +192,14 @@ const CreateExam: React.FC = () => {
 	};
 
 	const removeChoice = (qIndex: number, cIndex: number) => {
-		// If you want a confirmation for removing a choice, you can implement it similarly to removeQuestion
-		// For now, it directly removes without confirmation.
 		const newQuestions = [...questions];
 		const removedChoice = newQuestions[qIndex].choices[cIndex];
 		newQuestions[qIndex].choices.splice(cIndex, 1);
-		// If the removed choice was the correct answer, reset it
-		if (newQuestions[qIndex].correctAnswer === removedChoice) {
-			newQuestions[qIndex].correctAnswer = "";
-		}
+
+		// If the removed choice was among correct answers, remove it
+		newQuestions[qIndex].correctAnswers = newQuestions[qIndex].correctAnswers.filter(
+			(ans) => ans !== removedChoice
+		);
 		setQuestions(newQuestions);
 	};
 
@@ -221,6 +251,15 @@ const CreateExam: React.FC = () => {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		// Validation: Ensure each question has at least one correct answer selected
+		for (const q of questions) {
+			if (q.choices.filter(c => c.trim() !== "").length > 0 && q.correctAnswers.length === 0) {
+				openModal("Validation Error", `Question "${q.questionText.substring(0, 30)}..." must have at least one correct answer selected. Please review and select correct answer(s).`, undefined, "OK", "danger");
+				return;
+			}
+		}
+
 		setLoading(true);
 
 		try {
@@ -240,8 +279,8 @@ const CreateExam: React.FC = () => {
 				questions.map(async (q) => ({
 					questionName: q.questionText,
 					choices: q.choices,
-					correctAnswer: q.correctAnswer,
-					// Send new base64 image if present, or existing URL if in edit mode and no new file, or undefined
+					correctAnswers: q.correctAnswers, // Use correctAnswers
+					questionType: q.questionType,     // Send questionType
 					image: q.image ? await fileToBase64(q.image) : (isEditMode && q.imageURL ? q.imageURL : undefined),
 				}))
 			);
@@ -264,21 +303,30 @@ const CreateExam: React.FC = () => {
 			});
 
 			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.message || `Failed to ${isEditMode ? 'update' : 'submit'} exam`);
+				let errorMessage = `Failed to ${isEditMode ? 'update' : 'submit'} exam. Status: ${response.status}`;
+				try {
+					const errorData = await response.json();
+					errorMessage = errorData.message || errorData.error || errorMessage;
+				} catch (jsonError) {
+					// If response is not JSON, try to get text
+					const errorText = await response.text();
+					console.error("Server response was not JSON. Raw response:", errorText);
+					errorMessage += ` - Server response: ${errorText.substring(0, 100)}${errorText.length > 100 ? "..." : ""}`;
+				}
+				throw new Error(errorMessage);
 			}
 
 			const successMessage = isEditMode ? "Exam updated successfully!" : "Exam created successfully!";
 			openModal("Success", successMessage, () => {
 				if (isEditMode) {
-					router.push("/manage-exams"); // Redirect after editing
+					router.push("/manage-exams");
 				} else {
 					// Reset form for creation
 					setTitle("");
 					setExamImage(null);
 					setExistingExamImageURL(null);
-					setDuration(30); // Reset duration
-					setQuestions([{ questionText: "", choices: ["", ""], correctAnswer: "", image: null, imageURL: undefined }]);
+					setDuration(30);
+					setQuestions([{ questionText: "", choices: ["", ""], correctAnswers: [], image: null, imageURL: undefined, questionType: 'single' }]);
 					const fileInput = document.getElementById('examImageInput') as HTMLInputElement;
 					if (fileInput) fileInput.value = "";
 					questions.forEach((_, qIndex) => {
@@ -289,9 +337,10 @@ const CreateExam: React.FC = () => {
 			}, "OK", 'success');
 
 		} catch (error) {
-			console.error(error);
+			console.error("handleSubmit error:", error); // Log the full error object to the browser console
 			const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-			openModal("Error", `Something went wrong: ${errorMessage}`, undefined, undefined, 'danger');
+			// Add a note to check server logs for more details
+			openModal("Error", `Client error: ${errorMessage}. Please check the server console for more details if this is a server-side issue.`, undefined, undefined, 'danger');
 		} finally {
 			setLoading(false);
 		}
@@ -395,6 +444,21 @@ const CreateExam: React.FC = () => {
 								</div>
 
 								<div className="mb-3">
+									<label htmlFor={`questionType-${qIndex}`} className="block font-medium mb-1 text-gray-700">Question Type</label>
+									<select
+										id={`questionType-${qIndex}`}
+										className="w-full border border-gray-300 px-3 py-2 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+										value={q.questionType}
+										onChange={(e) =>
+											handleQuestionChange(qIndex, "questionType", e.target.value as 'single' | 'multiple')
+										}
+									>
+										<option value="single">Single Correct Answer</option>
+										<option value="multiple">Multiple Correct Answers</option>
+									</select>
+								</div>
+
+								<div className="mb-3">
 									<label htmlFor={`questionText-${qIndex}`} className="block font-medium mb-1 text-gray-700">Question Text</label>
 									<textarea
 										id={`questionText-${qIndex}`}
@@ -474,25 +538,47 @@ const CreateExam: React.FC = () => {
 								</div>
 
 								<div className="mb-3">
-									<label htmlFor={`correctAnswer-${qIndex}`} className="block font-medium mb-1 text-gray-700">Correct Answer</label>
-									<select
-										id={`correctAnswer-${qIndex}`}
-										className="w-full border border-gray-300 px-3 py-2 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-										value={q.correctAnswer}
-										onChange={(e) =>
-											handleQuestionChange(qIndex, "correctAnswer", e.target.value)
-										}
-										required
-									>
-										<option value="">Select correct answer</option>
-										{q.choices
-											.filter((choice) => choice.trim() !== "") // Ensure choice is not just whitespace
-											.map((choice, i) => (
-												<option key={i} value={choice}>
-													{choice}
-												</option>
-											))}
-									</select>
+									<label htmlFor={`correctAnswer-${qIndex}`} className="block font-medium mb-1 text-gray-700">Correct Answer(s)</label>
+									{q.questionType === 'single' ? (
+										<select
+											id={`correctAnswer-${qIndex}`}
+											className="w-full border border-gray-300 px-3 py-2 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+											value={q.correctAnswers[0] || ""}
+											onChange={(e) =>
+												handleCorrectAnswerChange(qIndex, e.target.value)
+											}
+											required={q.choices.filter(c => c.trim() !== "").length > 0} // Required if choices exist
+										>
+											<option value="">Select correct answer</option>
+											{q.choices
+												.filter((choice) => choice.trim() !== "")
+												.map((choice, i) => (
+													<option key={i} value={choice}>
+														{choice}
+													</option>
+												))}
+										</select>
+									) : (
+										<div className="space-y-2">
+											{q.choices
+												.filter((choice) => choice.trim() !== "")
+												.map((choice, i) => (
+													<label key={i} className="flex items-center p-2 border border-gray-200 rounded-md hover:bg-gray-100 cursor-pointer">
+														<input
+															type="checkbox"
+															className="mr-2 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+															value={choice}
+															checked={q.correctAnswers.includes(choice)}
+															onChange={(e) =>
+																handleCorrectAnswerChange(qIndex, choice, e.target.checked)
+															}
+														/>
+														{choice}
+													</label>
+												))}
+											{q.choices.filter(c => c.trim() !== "").length === 0 && <p className="text-sm text-gray-500">Add choices to select correct answers.</p>}
+										</div>
+									)}
 								</div>
 							</div>
 						))}
@@ -509,7 +595,7 @@ const CreateExam: React.FC = () => {
 							<button
 								type="submit"
 								className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 font-semibold disabled:opacity-70"
-								disabled={loading || pageLoading}
+								disabled={loading || pageLoading || questions.some(q => q.choices.filter(c => c.trim() !== "").length > 0 && q.correctAnswers.length === 0)}
 							>
 								{loading ? (isEditMode ? "Updating..." : "Submitting...") : (isEditMode ? "Update Exam" : "Submit Exam")}
 							</button>
