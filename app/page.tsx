@@ -16,12 +16,12 @@ const app = () => {
 							<BadgeCheck className='text-lg sm:text-xl inline-block me-2' />
 							<p className='text-xs sm:text-sm font-semibold text-center lg:text-start'>Get 30% off on first enroll</p>
 						</div>
-						<h1 className='text-primary text-3xl sm:text-4xl lg:text-5xl font-semibold pt-3 lg:pt-0 text-center lg:text-start'>Advance your engineering skills with us.</h1>
+						<h1 className='text-[#6B6C65] text-3xl sm:text-4xl lg:text-5xl font-semibold pt-3 lg:pt-0 text-center lg:text-start'>Advance your engineering skills with us.</h1>
 						<h3 className='text-black/70 text-base sm:text-lg pt-3 lg:pt-0 text-center lg:text-start'>Build skills with our practice exams, courses and mentor from world-class companies.</h3>
 						<div className="relative rounded-full text-center">
-							<input type="Email address" name="q" className="py-4 sm:py-6 lg:py-8 pl-6 pr-16 sm:pl-8 sm:pr-20 text-sm sm:text-base lg:text-lg w-full text-primary rounded-full focus:outline-none shadow-2xl" placeholder="search exams..." autoComplete="off" />
-							<Link href="/" className="bg-secondary p-3 sm:p-4 lg:p-5 rounded-full absolute right-1 sm:right-2 top-1/2 -translate-y-1/2">
-								<SearchCheck className="text-white text-2xl sm:text-3xl lg:text-4xl inline-block" />
+							<input type="Email address" name="q" className="py-4 sm:py-6 lg:py-5 pl-6 pr-12 sm:pl-8 sm:pr-14 lg:pr-16 text-sm sm:text-base lg:text-lg w-full text-primary rounded-full focus:outline-none shadow-2xl" placeholder="search exams..." autoComplete="off" />
+							<Link href="/" className="bg-[#728391] p-2 sm:p-[0.625rem] lg:p-3 rounded-full absolute right-2 sm:right-[0.625rem] lg:right-3 top-1/2 -translate-y-1/2">
+								<SearchCheck className="text-white text-base sm:text-lg lg:text-xl inline-block" />
 							</Link>
 						</div>
 						<div className='flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between pt-6 sm:pt-10 lg:pt-4'>
