@@ -1,26 +1,24 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 html,
 body,
 #root,
 .app {
-    height: 100%;
-    width: 100%;
-    align-items: center;
-    font-family: "Poppins", sans-serif;
-    @apply text-[#0F0D15]
+	height: 100%;
+	width: 100%;
+	align-items: center;
+	font-family: "Poppins", sans-serif;
+	@apply text-[#0F0D15];
 }
 
-
 html {
-    scroll-behavior: smooth;
+	scroll-behavior: smooth;
 }
 
 @theme {
-    --color-primary: #0F0D15;
-    --color-secondary: #27374D;
-    --color-gray: #FFFFFF;
-    --color-deepSlate: #DDEBFE;
-    --color-accent: #FF6501;
-
+	--color-primary: #0f0d15;
+	--color-secondary: #27374d;
+	--color-gray: #ffffff;
+	--color-deepSlate: #ddebfe;
+	--color-accent: #ff6501;
 }
