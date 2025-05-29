@@ -14,9 +14,9 @@ const Newsletter = () => {
 								Subscrible our newsletter for discounts, <br /> promo and many more.
 							</h3>
 							<div>
-								<div className="relative bg-gray text-white focus-within:text-white flex flex-row-reverse rounded-full pt-3 lg:pt-0">
+								<div className="relative bg-gray text-white focus-within:text-white flex flex-row-reverse rounded-full">
 									<input type="Email address" name="q" className="py-4 sm:py-6 lg:py-8 text-xs sm:text-sm md:text-lg w-full mx-2 sm:mx-3 text-black rounded-full pl-4 sm:pl-6 md:pl-8 focus:outline-none focus:text-black" placeholder="Enter your email address" autoComplete="off" />
-									<div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3 md:pr-4 lg:pr-6 pt-3 lg:pt-0">
+									<div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3 md:pr-4 lg:pr-6">
 										<button type="submit" className="p-2 sm:p-3 lg:p-5 focus:outline-none focus:shadow-outline bg-ultramarine hover:bg-midnightblue duration-150 ease-in-out rounded-full">
 											<SendHorizonal className="text-accent text-lg sm:text-xl md:text-2xl lg:text-4xl inline-block" />
 										</button>

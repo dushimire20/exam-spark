@@ -30,9 +30,8 @@ const Footer = () => {
 						<Image
 							src="/Logo.png"
 							alt="ExamSpark Logo"
-							width={120}
-							height={48}
-							className="sm:w-[150px] sm:h-[60px]"
+							width={150}
+							height={60}
 						/>
 						<div className="flex gap-3 sm:gap-4 mt-4 sm:mt-6">
 							<Link href="#" aria-label="Facebook">
