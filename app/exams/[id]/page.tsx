@@ -99,6 +99,7 @@ type ResultsDisplayProps = {
 	exam: {
 		title: string;
 		examQuestions: Question[];
+		duration?: number; // duration is now a number (minutes)
 	};
 	answers: { [key: number]: string };
 	score: number;
@@ -247,13 +248,13 @@ type PreExamScreenProps = {
 	exam: {
 		title: string;
 		examQuestions: Question[];
-		duration?: string;
+		duration?: number; // duration is now a number (minutes)
 	};
 	onStartExam: () => void;
 };
 
 const PreExamScreen = ({ exam, onStartExam }: PreExamScreenProps) => {
-	const durationMinutes = parseInt(exam.duration?.replace(/\D/g, '') || '30');
+	const durationMinutes = exam.duration || 30; // Use exam.duration directly
 	const numberOfQuestions = exam.examQuestions.length;
 
 	return (
@@ -290,7 +291,7 @@ const PreExamScreen = ({ exam, onStartExam }: PreExamScreenProps) => {
 const TakeExam = () => {
 	const { id } = useParams();
 	const router = useRouter(); // Initialize router
-	const [exam, setExam] = useState<any>(null);
+	const [exam, setExam] = useState<any>(null); // Consider defining a more specific type for exam
 	const [answers, setAnswers] = useState<{ [key: number]: string }>({});
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [timeLeft, setTimeLeft] = useState(0);
@@ -308,7 +309,7 @@ const TakeExam = () => {
 				const data = await res.json();
 				if (data.exam) {
 					setExam(data.exam);
-					const mins = parseInt(data.exam.duration?.replace(/\D/g, '')) || 30;
+					const mins = data.exam.duration || 30; // Use fetched duration, default to 30
 					setTimeLeft(mins * 60);
 					setInitialDuration(mins * 60); // Store initial duration
 				} else {
