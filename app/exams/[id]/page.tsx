@@ -75,7 +75,7 @@ const QuestionDisplay = ({
 			{question.choices.map((opt, i) => (
 				<label
 					key={i}
-					className={`flex items-center border px-4 py-3 rounded-md cursor-pointer transition ${selected === opt
+					className={`flex items-center border px-4 py-3 rounded-md whitespace-pre-line cursor-pointer transition ${selected === opt
 						? "bg-blue-50 border-blue-600"
 						: "hover:bg-gray-50 border-gray-300"
 						}`}
