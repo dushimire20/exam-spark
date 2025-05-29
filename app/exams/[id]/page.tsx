@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Loader2, Clock, CheckCircle, PlayCircle, Info, RotateCcw, ListChecks, XCircle, Check, AlertTriangle } from "lucide-react"; // Added AlertTriangle
-import Modal from "@/app/components/Modal"; // Import Modal
+import Modal from "@/app/components/Modal";
 
 type ExamHeaderProps = {
 	title: string;
@@ -350,8 +350,11 @@ const PreExamScreen = ({ exam, onStartExam }: PreExamScreenProps) => {
 				</div>
 			</div>
 
-			<p className="text-gray-600 mb-8 text-sm sm:text-base">
+			<p className="text-gray-600 mb-2 text-sm sm:text-base">
 				Please ensure you have a stable internet connection and a quiet environment. Once you start, the timer will begin.
+			</p>
+			<p className="text-gray-500 text-xs sm:text-sm mb-8 font-medium">
+				Note: The exam will attempt to enter fullscreen mode automatically.
 			</p>
 			<button
 				onClick={onStartExam}
@@ -389,13 +392,15 @@ const TakeExam = () => {
 	const [score, setScore] = useState(0);
 	const [examStarted, setExamStarted] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
-	const [skippedQuestionWarning, setSkippedQuestionWarning] = useState<string>(""); // For skip warning
-	const [modalState, setModalState] = useState<ModalState>({ // For confirmation modal
+	const [skippedQuestionWarning, setSkippedQuestionWarning] = useState<string>("");
+	const [modalState, setModalState] = useState<ModalState>({
 		isOpen: false,
 		title: "",
 		message: "",
 		isConfirmation: false,
 	});
+	const examContentRef = useRef<HTMLElement | null>(null);
+	const [focusLostCount, setFocusLostCount] = useState(0);
 
 	useEffect(() => {
 		const fetchExam = async () => {
@@ -440,10 +445,91 @@ const TakeExam = () => {
 		return () => clearInterval(interval);
 	}, [timeLeft, showResults, examStarted]);
 
+	// Effect for focus and visibility tracking
+	useEffect(() => {
+		const handleVisibilityChange = () => {
+			if (document.hidden && examStarted && !showResults) {
+				setFocusLostCount(prev => prev + 1);
+				openModal(
+					"Attention Required",
+					`You have navigated away from the exam screen. Please return immediately. This is warning #${focusLostCount + 1}.`,
+					undefined, // No onConfirm, just an info modal
+					"OK",
+					'danger'
+				);
+			}
+		};
+
+		const handleBlur = () => {
+			if (examStarted && !showResults) {
+				// Check if a modal is already open to avoid stacking warnings
+				if (!modalState.isOpen && document.visibilityState === 'visible') {
+					setFocusLostCount(prev => prev + 1);
+					openModal(
+						"Focus Lost",
+						`The exam window has lost focus. Please click back into the exam. This is warning #${focusLostCount + 1}.`,
+						undefined,
+						"OK",
+						'danger'
+					);
+				}
+			}
+		};
+
+		const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+			if (examStarted && !showResults) {
+				event.preventDefault();
+				event.returnValue = "Are you sure you want to leave? Your exam progress might be lost if you haven't submitted.";
+				return event.returnValue;
+			}
+		};
+
+		if (examStarted && !showResults) {
+			document.addEventListener("visibilitychange", handleVisibilityChange);
+			window.addEventListener("blur", handleBlur);
+			window.addEventListener("beforeunload", handleBeforeUnload);
+		}
+
+		return () => {
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+			window.removeEventListener("blur", handleBlur);
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+		};
+	}, [examStarted, showResults, modalState.isOpen, focusLostCount]);
+
+
+	// Effect to request fullscreen when exam starts and examContentRef is available
+	useEffect(() => {
+		const requestFs = async () => {
+			if (examStarted && !showResults && examContentRef.current && !document.fullscreenElement) {
+				try {
+					if (examContentRef.current.requestFullscreen) {
+						await examContentRef.current.requestFullscreen();
+					} else if ((examContentRef.current as any).mozRequestFullScreen) { /* Firefox */
+						await (examContentRef.current as any).mozRequestFullScreen();
+					} else if ((examContentRef.current as any).webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+						await (examContentRef.current as any).webkitRequestFullscreen();
+					} else if ((examContentRef.current as any).msRequestFullscreen) { /* IE/Edge */
+						await (examContentRef.current as any).msRequestFullscreen();
+					}
+				} catch (err) {
+					console.warn("Could not enter fullscreen mode:", err);
+					openModal(
+						"Fullscreen Mode",
+						"We recommend using fullscreen mode for the best exam experience. You can usually enable it by pressing F11 or through your browser's view menu.",
+						undefined,
+						"OK"
+					);
+				}
+			}
+		};
+		requestFs();
+	}, [examStarted, showResults]); // Runs when examStarted or showResults changes
+
+
 	useEffect(() => {
 		if (timeLeft === 0 && examStarted && !showResults) {
-			// Automatically submit if time runs out after exam has started
-			handleSubmit(true); // Pass a flag to indicate auto-submission
+			handleSubmit(true);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [timeLeft, examStarted, showResults]);
@@ -502,6 +588,10 @@ const TakeExam = () => {
 
 		setScore(correct);
 		setShowResults(true);
+		// Attempt to exit fullscreen when results are shown
+		if (document.fullscreenElement) {
+			document.exitFullscreen().catch(err => console.error("Error exiting fullscreen:", err));
+		}
 	};
 
 
@@ -553,18 +643,24 @@ const TakeExam = () => {
 	};
 
 
-	const handleStartExam = () => {
+	const handleStartExam = () => { // Simplified: just sets examStarted
 		setExamStarted(true);
+		setFocusLostCount(0);
 	};
 
 	const handleRetakeExam = () => {
 		setAnswers({});
 		setCurrentIndex(0);
-		setTimeLeft(initialDuration); // Reset timer to full duration
+		setTimeLeft(initialDuration);
 		setShowResults(false);
 		setScore(0);
-		setExamStarted(false); // Go back to pre-exam screen
-		// Optionally, re-fetch exam if content could change, though not typical for a retake
+		setExamStarted(false);
+		setSkippedQuestionWarning("");
+		setFocusLostCount(0);
+		// Attempt to exit fullscreen if still in it
+		if (document.fullscreenElement) {
+			document.exitFullscreen().catch(err => console.error("Error exiting fullscreen:", err));
+		}
 	};
 
 
@@ -589,7 +685,8 @@ const TakeExam = () => {
 
 	if (!examStarted) {
 		return (
-			<section className="container mx-auto mt-16 sm:mt-20 py-12 w-full flex items-center justify-center min-h-[calc(100vh-80px)] px-4">
+			// This section is NOT fullscreened. examContentRef is not used here.
+			<section className="container mx-auto mt-16 sm:mt-20 py-12 w-full flex items-center justify-center min-h-[calc(100vh-80px)] px-4 bg-white">
 				<PreExamScreen exam={exam} onStartExam={handleStartExam} />
 			</section>
 		);
@@ -597,7 +694,8 @@ const TakeExam = () => {
 
 	if (showResults) {
 		return (
-			<section className="container mx-auto mt-16 sm:mt-20 py-8 sm:py-12 w-full px-4">
+			// This section is also NOT typically fullscreened as fullscreen is exited on submit.
+			<section className="container mx-auto mt-16 sm:mt-20 py-8 sm:py-12 w-full px-4 bg-white">
 				<ResultsDisplay
 					exam={exam}
 					answers={answers}
@@ -615,16 +713,17 @@ const TakeExam = () => {
 
 	return (
 		<>
-			<Modal
-				isOpen={modalState.isOpen}
-				onClose={closeModal}
-				title={modalState.title}
-				message={modalState.message}
-				onConfirm={modalState.onConfirm}
-				confirmText={modalState.confirmText}
-				confirmButtonType={modalState.confirmButtonType}
-			/>
-			<section className="container mx-auto mt-16 sm:mt-20 py-8 sm:py-12 w-full px-4">
+			<section ref={examContentRef} className="container mx-auto pt-8 sm:pt-12 pb-8 sm:pb-12 w-full px-4 bg-white min-h-screen">
+				{/* Modal is now a child of the fullscreen target element */}
+				<Modal
+					isOpen={modalState.isOpen}
+					onClose={closeModal}
+					title={modalState.title}
+					message={modalState.message}
+					onConfirm={modalState.onConfirm}
+					confirmText={modalState.confirmText}
+					confirmButtonType={modalState.confirmButtonType}
+				/>
 				<div className="w-full md:w-[80%] lg:w-[65%] mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-xl">
 					<ExamHeader title={exam.title} timeLeft={timeLeft} />
 
@@ -654,7 +753,7 @@ const TakeExam = () => {
 
 						{currentIndex === totalQuestions - 1 ? (
 							<button
-								onClick={() => handleSubmit(false)} // Explicitly pass false for manual submission
+								onClick={() => handleSubmit(false)}
 								className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
 							>
 								<CheckCircle className="w-5 h-5" />
