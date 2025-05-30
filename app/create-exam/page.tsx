@@ -1,12 +1,12 @@
+"use client";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
 import React, { useState, useEffect } from "react";
 import Modal from "@/app/components/Modal";
 import { useSearchParams, useRouter } from "next/navigation"; // Import useRouter
 import Image from "next/image"; // Import Image for displaying existing images
 import { Loader2 } from "lucide-react"; // Import Loader2 icon
-
+import { Suspense } from "react"; // Import Suspense for lazy loading
 interface Question {
 	questionText: string;
 	choices: string[];
@@ -359,7 +359,7 @@ const CreateExam: React.FC = () => {
 	}
 
 	return (
-		<>
+		<Suspense fallback={<div>Loading...</div>}>
 			<Modal
 				isOpen={modalState.isOpen}
 				onClose={closeModal}
@@ -605,7 +605,7 @@ const CreateExam: React.FC = () => {
 					</form>
 				</div>
 			</div>
-		</>
+		</Suspense>
 	);
 };
 
