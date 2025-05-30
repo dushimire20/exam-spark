@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Loader2, Clock, CheckCircle, PlayCircle, Info, RotateCcw, ListChecks, XCircle, Check, AlertTriangle } from "lucide-react"; // Added AlertTriangle
