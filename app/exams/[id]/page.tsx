@@ -170,8 +170,8 @@ type ResultsDisplayProps = {
 };
 
 const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onRetakeExam }: ResultsDisplayProps) => {
-	const router = useRouter();
-	const percentage = totalDuration > 0 ? ((totalDuration - timeTaken) / totalDuration * 100) : 0;
+	// const router = useRouter();
+	// const percentage = totalDuration > 0 ? ((totalDuration - timeTaken) / totalDuration * 100) : 0;
 
 
 	return (
@@ -382,7 +382,6 @@ interface ModalState {
 
 const TakeExam = () => {
 	const { id } = useParams();
-	const router = useRouter();
 	const [exam, setExam] = useState<ExamData | null>(null);
 	const [answers, setAnswers] = useState<{ [key: number]: string | string[] }>({});
 	const [currentIndex, setCurrentIndex] = useState(0);

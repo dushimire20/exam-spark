@@ -2,7 +2,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { BadgeCheck, SearchCheck, CircleCheckBig } from "lucide-react";
-import Companies from "./components/companies";
 import Exams from "./components/homeExams";
 import Newsletter from "./components/newLetter";
 
