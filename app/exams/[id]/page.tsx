@@ -630,7 +630,7 @@ const TakeExam = () => {
 		const currentAnswer = answers[currentIndex];
 		if (currentAnswer === undefined || (Array.isArray(currentAnswer) && currentAnswer.length === 0)) {
 			setSkippedQuestionWarning("You've skipped this question. You can come back to it later.");
-			setTimeout(() => setSkippedQuestionWarning(""), 3000); // Clear warning after 3 seconds
+			setTimeout(() => setSkippedQuestionWarning(""), 8000); // Clear warning after 3 seconds
 		} else {
 			setSkippedQuestionWarning(""); // Clear warning if question was answered before moving
 		}
@@ -713,7 +713,7 @@ const TakeExam = () => {
 
 	return (
 		<>
-			<section ref={examContentRef} className="container mx-auto pt-8 sm:pt-12 pb-8 sm:pb-12 w-full px-4 bg-white min-h-screen">
+			<section ref={examContentRef} className="container mx-auto pt-8 sm:pt-12 pb-8 sm:pb-12 w-full px-4 bg-white min-h-screen overflow-y-auto">
 				{/* Modal is now a child of the fullscreen target element */}
 				<Modal
 					isOpen={modalState.isOpen}
