@@ -43,7 +43,7 @@ const ManageExamsPage: React.FC = () => {
         message: "",
         confirmButtonType: 'default',
     });
-    const [examToDelete, setExamToDelete] = useState<string | null>(null);
+    // const [examToDelete, setExamToDelete] = useState<string | null>(null);
     const [selectedExamForView, setSelectedExamForView] = useState<ExamDetails | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const router = useRouter();

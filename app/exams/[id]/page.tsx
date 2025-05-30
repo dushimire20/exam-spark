@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Loader2, Clock, CheckCircle, PlayCircle, Info, RotateCcw, ListChecks, XCircle, Check, AlertTriangle } from "lucide-react"; // Added AlertTriangle
@@ -170,8 +170,8 @@ type ResultsDisplayProps = {
 };
 
 const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onRetakeExam }: ResultsDisplayProps) => {
-	const router = useRouter();
-	const percentage = totalDuration > 0 ? ((totalDuration - timeTaken) / totalDuration * 100) : 0;
+	// const router = useRouter();
+	// const percentage = totalDuration > 0 ? ((totalDuration - timeTaken) / totalDuration * 100) : 0;
 
 
 	return (
@@ -382,7 +382,6 @@ interface ModalState {
 
 const TakeExam = () => {
 	const { id } = useParams();
-	const router = useRouter();
 	const [exam, setExam] = useState<ExamData | null>(null);
 	const [answers, setAnswers] = useState<{ [key: number]: string | string[] }>({});
 	const [currentIndex, setCurrentIndex] = useState(0);
