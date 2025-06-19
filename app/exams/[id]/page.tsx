@@ -418,7 +418,7 @@ const TakeExam = () => {
 				};
 
 				// Process and shuffle questions
-				let questions = data.exam.examQuestions.map((q: any) => ({
+				const questions = data.exam.examQuestions.map((q: any) => ({
 					...q,
 					questionType: q.questionType || 'single',
 					correctAnswers: q.correctAnswers || (q.correctAnswer ? [q.correctAnswer] : []),
