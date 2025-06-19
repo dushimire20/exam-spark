@@ -402,41 +402,57 @@ const TakeExam = () => {
 	const [focusLostCount, setFocusLostCount] = useState(0);
 
 	useEffect(() => {
-		const fetchExam = async () => {
-			setIsLoading(true);
-			try {
-				const res = await fetch(`/api/exams?id=${id}`);
-				const data = await res.json();
-				if (data.exam) {
-					// Ensure correctAnswers is always an array, even if old data has correctAnswer
-					const processedExam = {
-						...data.exam,
-						examQuestions: data.exam.examQuestions.map((q: any) => ({
-							...q,
-							questionType: q.questionType || 'single',
-							correctAnswers: q.correctAnswers || (q.correctAnswer ? [q.correctAnswer] : []),
-						})),
-					};
-					setExam(processedExam);
-					const mins = processedExam.duration || 30;
-					setTimeLeft(mins * 60);
-					setInitialDuration(mins * 60); // Store initial duration
-				} else {
-					// Handle exam not found scenario if necessary
-					console.error("Exam not found");
-					setExam(null); // Or redirect, show error message
-				}
-			} catch (error) {
-				console.error("Failed to fetch exam:", error);
+	const fetchExam = async () => {
+		setIsLoading(true);
+		try {
+			const res = await fetch(`/api/exams?id=${id}`);
+			const data = await res.json();
+			if (data.exam) {
+				// Helper: Shuffle array
+				const shuffleArray = (array: any[]) => {
+					for (let i = array.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[array[i], array[j]] = [array[j], array[i]];
+					}
+					return array;
+				};
+
+				// Process and shuffle questions
+				let questions = data.exam.examQuestions.map((q: any) => ({
+					...q,
+					questionType: q.questionType || 'single',
+					correctAnswers: q.correctAnswers || (q.correctAnswer ? [q.correctAnswer] : []),
+				}));
+
+				// Randomly select 20
+				const selectedQuestions = shuffleArray(questions).slice(0, 20);
+
+				const processedExam = {
+					...data.exam,
+					examQuestions: selectedQuestions,
+				};
+
+				setExam(processedExam);
+				const mins = processedExam.duration || 30;
+				setTimeLeft(mins * 60);
+				setInitialDuration(mins * 60);
+			} else {
+				console.error("Exam not found");
 				setExam(null);
-			} finally {
-				setIsLoading(false);
 			}
-		};
-		if (id) {
-			fetchExam();
+		} catch (error) {
+			console.error("Failed to fetch exam:", error);
+			setExam(null);
+		} finally {
+			setIsLoading(false);
 		}
-	}, [id]);
+	};
+
+	if (id) {
+		fetchExam();
+	}
+}, [id]);
+
 
 	useEffect(() => {
 		if (!examStarted || !timeLeft || showResults) return; // Timer runs only if exam started and not showing results
