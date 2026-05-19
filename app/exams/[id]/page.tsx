@@ -183,7 +183,7 @@ const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onReta
 			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 p-4 bg-gray-50 rounded-lg border">
 				<div className="text-center">
 					<p className="text-sm font-semibold text-gray-500 mb-1">SCORE</p>
-					<p className={`text-2xl font-bold ${score / exam.examQuestions.length >= 0.5 ? 'text-green-600' : 'text-red-600'}`}>
+					<p className={`text-2xl font-bold ${score >= 12 ? 'text-green-600' : 'text-red-600'}`}>
 						{score} / {exam.examQuestions.length}
 					</p>
 				</div>
@@ -197,6 +197,33 @@ const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onReta
 				</div>
 			</div>
 
+			{/* Message Section */}
+			{score >= 12 ? (
+				<div className="mb-8 p-6 bg-green-50 border-l-4 border-green-500 rounded-lg">
+					<div className="flex items-start gap-3">
+						<CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+						<div>
+							<h3 className="text-xl font-bold text-green-700 mb-2">🎉 Congratulations!</h3>
+							<p className="text-green-700 font-medium text-lg">
+								You passed the exam! Great job! Keep up the excellent work and continue learning.
+							</p>
+						</div>
+					</div>
+				</div>
+			) : (
+				<div className="mb-8 p-6 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+					<div className="flex items-start gap-3">
+						<AlertTriangle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
+						<div>
+							<h3 className="text-xl font-bold text-orange-700 mb-2">Keep Trying!</h3>
+							<p className="text-orange-700 font-medium text-lg">
+								You didn't pass this time. Don't worry! Review the material and try again. You'll do better next time!
+								Ukeneye nibura amanota 12. Kandi kora cyane reka ubunebwe!
+							</p>
+						</div>
+					</div>
+				</div>
+			)}
 
 			{exam.examQuestions.map((q, idx) => {
 				const userAnswer = answers[idx];
@@ -417,15 +444,27 @@ const TakeExam = () => {
 					return array;
 				};
 
-				// Process and shuffle questions
+				// Process questions
 				const questions = data.exam.examQuestions.map((q: any) => ({
 					...q,
 					questionType: q.questionType || 'single',
 					correctAnswers: q.correctAnswers || (q.correctAnswer ? [q.correctAnswer] : []),
 				}));
 
-				// Randomly select 20
-				const selectedQuestions = shuffleArray(questions).slice(0, 20);
+				// Separate questions into two groups: with and without pictures
+				const questionsWithPictures = questions.filter(q => q.image);
+				const questionsWithoutPictures = questions.filter(q => !q.image);
+
+				// Shuffle each group
+				const shuffledWithPictures = shuffleArray(questionsWithPictures);
+				const shuffledWithoutPictures = shuffleArray(questionsWithoutPictures);
+
+				// Select 10 from each group (or all if fewer than 10)
+				const selectedWithPictures = shuffledWithPictures.slice(0, 10);
+				const selectedWithoutPictures = shuffledWithoutPictures.slice(0, 10);
+
+				// Combine and shuffle the final selection
+				const selectedQuestions = shuffleArray([...selectedWithPictures, ...selectedWithoutPictures]);
 
 				const processedExam = {
 					...data.exam,
