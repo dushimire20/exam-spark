@@ -7,10 +7,11 @@ import { usePathname } from "next/navigation";
 import useMediaQuery from "@/app/hook/useMediaQuery";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 
 const Navbar = () => {
 	const [isMenuToggled, setIsMenuToggled] = useState(false);
+	const { isSignedIn } = useAuth();
 	const isAboveMediumScreens = useMediaQuery("(min-width: 1060px)");
 	const pathname = usePathname();
 
@@ -52,25 +53,25 @@ const Navbar = () => {
 
 						{/* Right: Auth */}
 						<div className="flex items-center gap-4">
-							<SignedOut>
-								<Link
-									href="/sign-in"
-									className="text-gray-700 hover:text-accent transition"
-								>
-									Sign In
-								</Link>
-								<Link
-									href="/sign-up"
-									className="bg-primary text-white px-4 py-2 rounded-full flex items-center gap-1 hover:bg-accent transition"
-								>
-									Open an Account
-									<ArrowUpRight size={18} />
-								</Link>
-							</SignedOut>
-
-							<SignedIn>
+							{!isSignedIn ? (
+								<>
+									<Link
+										href="/sign-in"
+										className="text-gray-700 hover:text-accent transition"
+									>
+										Sign In
+									</Link>
+									<Link
+										href="/sign-up"
+										className="bg-primary text-white px-4 py-2 rounded-full flex items-center gap-1 hover:bg-accent transition"
+									>
+										Open an Account
+										<ArrowUpRight size={18} />
+									</Link>
+								</>
+							) : (
 								<UserButton afterSignOutUrl="/" />
-							</SignedIn>
+							)}
 						</div>
 					</div>
 				) : (
@@ -103,18 +104,19 @@ const Navbar = () => {
 
 						{/* Auth items at the top for mobile */}
 						<div className="flex flex-col items-center gap-4 mb-6 px-4">
-							<SignedIn>
+							{isSignedIn ? (
 								<UserButton afterSignOutUrl="/" />
-							</SignedIn>
-							<SignedOut>
-								<Link href="/sign-in" className="w-full text-center py-2 hover:bg-gray-100 rounded-md">Sign In</Link>
-								<Link
-									href="/sign-up"
-									className="w-full text-center py-2 bg-primary text-white rounded-md hover:bg-accent transition flex items-center justify-center gap-1"
-								>
-									Open an Account <ArrowUpRight size={18} />
-								</Link>
-							</SignedOut>
+							) : (
+								<>
+									<Link href="/sign-in" className="w-full text-center py-2 hover:bg-gray-100 rounded-md">Sign In</Link>
+									<Link
+										href="/sign-up"
+										className="w-full text-center py-2 bg-primary text-white rounded-md hover:bg-accent transition flex items-center justify-center gap-1"
+									>
+										Open an Account <ArrowUpRight size={18} />
+									</Link>
+								</>
+							)}
 						</div>
 
 						{/* Divider */}
