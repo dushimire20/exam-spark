@@ -217,7 +217,7 @@ const ResultsDisplay = ({ exam, answers, score, timeTaken, totalDuration, onReta
 						<div>
 							<h3 className="text-xl font-bold text-orange-700 mb-2">Keep Trying!</h3>
 							<p className="text-orange-700 font-medium text-lg">
-								You didn't pass this time. Don't worry! Review the material and try again. You'll do better next time!
+								You didn&apos;t pass this time. Don't worry! Review the material and try again. You'll do better next time!
 								Ukeneye nibura amanota 12. Kandi kora cyane reka ubunebwe!
 							</p>
 						</div>
